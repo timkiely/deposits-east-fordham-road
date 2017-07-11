@@ -40,16 +40,23 @@ bronx_banks %>%
   addMarkers(popup = ~addresbr)
 
 
+
+
+
 # manually select the corridor with editmap
-e_fordham_road_shapefile<-
-  bronx_banks %>% 
-  leaflet() %>% 
-  addTiles() %>% 
-  addMarkers() %>% 
-  editMap()
+# (Not run)
+# e_fordham_road_shapefile<-
+#   bronx_banks %>%
+#   leaflet() %>%
+#   addTiles() %>%
+#   addMarkers() %>%
+#   editMap()
 
 # extract the line
-e_fordham_road_sf <- e_fordham_road_shapefile$finished
+# e_fordham_road_sf <- e_fordham_road_shapefile$finished
+
+# st_write(e_fordham_road_sf, "data/e_fordham_road_linestring.geojson",driver="GEOjson", delete_dsn = T)
+e_fordham_road_sf <- st_read("E Fordham Road/data/e_fordham_road_linestring.geojson")
 
 # show the line
 e_fordham_road_sf %>% 
@@ -61,7 +68,7 @@ e_fordham_road_sf %>%
 e_fordham_buffer<- 
   e_fordham_road_sf %>% 
   st_transform(crs = 32618) %>% 
-  st_buffer(50) %>% 
+  st_buffer(25) %>% 
   st_transform(crs = 4326) 
 
 set_view_coords <- 
@@ -84,8 +91,50 @@ e_fordham_buffer %>%
 
 
 # filter for banks from the original dataset
-contain_vec st_contains(e_fordham_buffer,fdic_sf)
+contain_vec <- st_contains(e_fordham_buffer,fdic_sf)[[1]]
 
+# convert dollar character to numeric
+fix_dollar <- function(x) as.numeric(stringr::str_replace(x,"$|,",""))
+
+
+fordham_street <-
+fdic_sf %>% 
+  filter(row_number()%in%contain_vec) %>% 
+  st_set_geometry(NULL) %>% 
+  group_by(year) %>% 
+  summarise(Fordham_Deposits = sum(fix_dollar(depsumbr),na.rm=T))
+  
+
+all_bronx <- 
+fdic_sf %>% 
+  filter(cntynamb=="Bronx") %>% 
+  filter(stnamebr=="New York") %>% 
+  st_set_geometry(NULL) %>% 
+  group_by(year) %>% 
+  summarise(Bronx_Deposits = sum(fix_dollar(depsumbr),na.rm=T))
+
+
+compare_deposits <- left_join(fordham_street,all_bronx, by = "year")
+
+percent_change <-
+  compare_deposits %>% 
+  filter(year%in%c(min(year),max(year))) %>% 
+  mutate_if(.predicate=is.numeric,.funs = function(x) x = scales::percent((x - lag(x,1))/lag(x,1))) %>% 
+  filter(year==max(year))
+
+compare_deposits %>% 
+  rename("All Bronx" = Bronx_Deposits, "E. Fordham Street" = Fordham_Deposits) %>% 
+  gather(Var, Value, -year) %>% 
+  ggplot()+
+  aes(x = year, y = Value, group = Var, color = Var, fill = Var)+
+  geom_line()+
+  facet_wrap(~Var, ncol = 1, scales = "free_y")+
+  theme_minimal()+
+  ggthemes::scale_color_fivethirtyeight()+
+  scale_y_continuous(labels = scales::comma)+
+  labs(col=NULL
+       , y = NULL
+       , x = NULL)
 
 
 
