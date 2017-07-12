@@ -235,4 +235,4 @@ knitr::kable(percent_change)
 |:-----|:------------------|:----------------|
 | 2016 | 144%              | 51.2%           |
 
-This is a simple technique for quickly hand-drawing and caching shapefile, then using that shapefile to filter a geo-located data set.
+This is a simple technique for quickly hand-drawing and caching a shapefile, then using that shapefile to filter a geo-located data set.
