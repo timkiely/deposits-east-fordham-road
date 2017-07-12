@@ -93,7 +93,7 @@ e_fordham_road_shapefile<-
 e_fordham_road_sf <- e_fordham_road_shapefile$finished
 
 # write to a GEOjson file
-st_write(e_fordham_road_sf, "E Fordham Road/data/e_fordham_road_linestring.geojson",driver="GEOjson", delete_dsn = T)
+st_write(e_fordham_road_sf, "data/e_fordham_road_linestring.geojson",driver="GEOjson", delete_dsn = T)
 ```
 
 Loading the cached file
@@ -103,7 +103,6 @@ Loading the cached file
 e_fordham_road_sf <- st_read("data/e_fordham_road_linestring.geojson")
 ```
 
-    ## Reading layer `OGRGeoJSON' from data source `/Users/timkiely/Dropbox (hodgeswardelliott)/hodgeswardelliott Team Folder/Teams/Data/Tim_Kiely/FDIC/E Fordham Road/data/e_fordham_road_linestring.geojson' using driver `GeoJSON'
     ## converted into: LINESTRING
     ## Simple feature collection with 1 feature and 2 fields
     ## geometry type:  LINESTRING
